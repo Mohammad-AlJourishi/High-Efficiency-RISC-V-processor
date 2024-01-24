@@ -1,0 +1,92 @@
+ //EXE 3rd stage
+module alu (
+    input clk,
+    input [7:0] operand1,
+    input [7:0] operand2,
+    input [3:0] alu_control,
+    output reg [7:0] result,
+    output reg zero
+  );
+
+    always @(negedge clk) begin
+      case (alu_control)
+        4'b0000: result = operand1 + operand2; // ADD
+        4'b0010: result = operand1 - operand2; // SUB
+        4'b0100: result = operand1 << operand2[2:0]; // SLL
+        4'b0101: result = operand1 >> operand2[2:0]; // SRL
+        4'b0110: result = operand1 | operand2; // OR
+        4'b0111: result = operand1 & operand2; // AND
+        4'b1000: result = operand1 ^ operand2; // XOR
+        // Add more operations as needed
+        default: result = 8'h00;
+      endcase
+      zero = (result == 8'h00); // Set zero flag based on result
+    end
+  endmodule
+
+`timescale 1ns / 1ps
+
+module alu_tb;
+
+    // Inputs
+    reg clk;
+    reg [7:0] operand1;
+    reg [7:0] operand2;
+    reg [3:0] alu_control;
+
+    // Outputs
+    wire [7:0] result;
+    wire zero;
+
+    // Instantiate the Unit Under Test (UUT)
+    alu uut (
+        .clk(clk), 
+        .operand1(operand1), 
+        .operand2(operand2), 
+        .alu_control(alu_control), 
+        .result(result), 
+        .zero(zero)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Clock with period of 20ns
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        operand1 = 0;
+        operand2 = 0;
+        alu_control = 0;
+
+        // Wait for global reset
+        #100;
+
+        // Test ADD operation
+        operand1 = 8'h01;
+        operand2 = 8'h01;
+        alu_control = 4'b0000; // ADD
+        #20;
+
+        // Test SUB operation
+        operand1 = 8'h03;
+        operand2 = 8'h01;
+        alu_control = 4'b0010; // SUB
+        #20;
+
+        // Add more test cases for other operations
+
+        // Finish the simulation
+        #100;
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("Time = %t, Result = %h, Zero = %b",
+                  $time, result, zero);
+    end
+
+endmodule

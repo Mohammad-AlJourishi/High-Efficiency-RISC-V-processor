@@ -1,0 +1,84 @@
+// Store Word (sw) Module
+module store_word(
+    input [6:0] opcode,       // Opcode for store instructions
+    input [2:0] funct3,       // Function 3 for sw
+    input [4:0] rs1,          // Source register 1 (base address)
+    input [4:0] rs2,          // Source register 2 (data to store)
+    input [11:0] imm,         // Immediate value (offset)
+    input clk,
+    output reg [31:0] mem_addr, // Memory address
+    output reg [31:0] data_out   // Data to store (word)
+);
+
+    // Opcode for Store Word (sw) is 0100011 (23 in hex) and funct3 for sw is 010
+    always @(negedge clk) begin
+        if (opcode == 7'b0100011 && funct3 == 3'b000) begin
+            // Calculate memory address using base register and immediate offset
+            mem_addr = rs1 + {{20{imm[11]}}, imm[11:0]};
+            // Data to store is the content of rs2
+            data_out = rs2;
+        end
+    end
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module testbench;
+
+    // Inputs
+    reg [6:0] opcode;
+    reg [2:0] funct3;
+    reg [4:0] rs1;
+    reg [4:0] rs2;
+    reg [11:0] imm;
+    reg clk; // Clock signal
+
+    // Outputs
+    wire [31:0] mem_addr_sb;
+    wire [7:0] data_out_sb;
+    wire [31:0] mem_addr_sw;
+    wire [31:0] data_out_sw;
+
+   
+
+    // Instantiate the Store Word module
+    store_word sw_inst (
+        .opcode(opcode),
+        .funct3(funct3),
+        .rs1(rs1),
+        .rs2(rs2),
+        .imm(imm),
+        .clk(clk), // Connect the clock
+        .mem_addr(mem_addr_sw),
+        .data_out(data_out_sw)
+    );
+
+    // Clock generation
+    initial clk = 0;
+    always #5 clk = ~clk; // Toggle clock every 5 ns
+
+    // Apply test vectors
+    initial begin
+        // Initialize inputs
+        opcode = 7'b0100011; // Common opcode for store instructions
+        rs1 = 5'b00010; // Example base address register value
+        rs2 = 5'b00011; // Example data register value
+        imm = 12'h004; // Example immediate offset
+
+      
+        // Test Store Word
+        funct3 = 3'b000; // funct3 for sw
+        @(negedge clk); // Wait for negative edge of the clock
+        #1; // Wait for 1 ns to simulate some delay for the check
+        if (mem_addr_sw !== (rs1 + {{20{imm[11]}}, imm[11:0]}) || data_out_sw !== rs2) begin
+            $display("Store Word failed with rs1=%b, rs2=%b, imm=%b", rs1, rs2, imm);
+        end else begin
+            $display("Store Word success!");
+        end
+
+        // Finish simulation
+        $finish;
+    end
+
+endmodule

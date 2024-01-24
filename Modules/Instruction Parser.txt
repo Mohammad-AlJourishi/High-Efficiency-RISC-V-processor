@@ -1,0 +1,72 @@
+// Instruction Parser Module for RISC-V Processor (32-bit instructions)
+module instruction_parser_riscv (
+    input [31:0] instruction,   // 32-bit instruction input
+    output [6:0] opcode,        // Opcode (7 bits)
+    output [4:0] rd,            // Destination register (5 bits)
+    output [2:0] funct3,        // Function code (3 bits)
+    output [4:0] rs1,           // Source register 1 (5 bits)
+    output [4:0] rs2,           // Source register 2 (5 bits)
+    output [6:0] funct7         // Function code (7 bits)
+);
+
+// Parsing logic using continuous assignment
+assign opcode = instruction[6:0];
+assign rd = instruction[11:7];
+assign funct3 = instruction[14:12];
+assign rs1 = instruction[19:15];
+assign rs2 = instruction[24:20];
+assign funct7 = instruction[31:25];
+
+endmodule
+
+
+
+
+// Testbench for Instruction Parser Module (RISC-V)
+`timescale 1ns / 1ps
+
+module instruction_parser_riscv_tb;
+
+// Inputs
+reg [31:0] instruction;
+
+// Outputs
+wire [6:0] opcode;
+wire [4:0] rd;
+wire [2:0] funct3;
+wire [4:0] rs1;
+wire [4:0] rs2;
+wire [6:0] funct7;
+
+// Instantiate the Unit Under Test (UUT)
+instruction_parser_riscv uut (
+    .instruction(instruction), 
+    .opcode(opcode),
+    .rd(rd), 
+    .funct3(funct3), 
+    .rs1(rs1), 
+    .rs2(rs2), 
+    .funct7(funct7)
+);
+
+// Test sequence
+initial begin
+    // Test Case 1
+    instruction = 32'b00000000000100010000001010010011; // Random RISC-V instruction
+    #20;
+    // Test Case 2
+    instruction = 32'b11111111111100010000001010110011; // Another RISC-V instruction
+    #20;
+
+    // Finish the simulation
+    #100;
+    $finish;
+end
+
+// Monitor changes
+initial begin
+    $monitor("At time %t, Instruction = %b | Opcode = %b | Rd = %b | Funct3 = %b | Rs1 = %b | Rs2 = %b | Funct7 = %b",
+              $time, instruction, opcode, rd, funct3, rs1, rs2, funct7);
+end
+
+endmodule

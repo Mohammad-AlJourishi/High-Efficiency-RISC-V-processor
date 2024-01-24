@@ -1,0 +1,103 @@
+
+  // ID 2nd stage  
+  module register_file (
+    input clk,
+    input [1:0] read_register_1, // Address for read port 1
+    input [1:0] read_register_2, // Address for read port 2
+    input [1:0] write_register,   // Address for write port
+    input write_enable,           // Write enable signal
+    input [7:0] write_data,       // Data to be written
+    output reg [7:0] data_out_1,  // Output from register 1
+    output reg [7:0] data_out_2   // Output from register 2
+  );
+
+    reg [7:0] registers [3:0];     // 4 8-bit registers
+
+    always @(negedge clk) begin
+      // Read from the specified registers
+      data_out_1 = registers[read_register_1];
+      data_out_2 = registers[read_register_2];
+
+      // Write to the register file if write_enable is high
+      if (write_enable) begin
+        registers[write_register] <= write_data;
+      end
+    end
+  endmodule
+
+`timescale 1ns / 1ps
+
+module register_file_tb;
+
+    // Inputs
+    reg clk;
+    reg [1:0] read_register_1;
+    reg [1:0] read_register_2;
+    reg [1:0] write_register;
+    reg write_enable;
+    reg [7:0] write_data;
+
+    // Outputs
+    wire [7:0] data_out_1;
+    wire [7:0] data_out_2;
+
+    // Instantiate the Unit Under Test (UUT)
+    register_file uut (
+        .clk(clk), 
+        .read_register_1(read_register_1), 
+        .read_register_2(read_register_2), 
+        .write_register(write_register), 
+        .write_enable(write_enable), 
+        .write_data(write_data), 
+        .data_out_1(data_out_1), 
+        .data_out_2(data_out_2)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Clock with period of 20ns
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        read_register_1 = 0;
+        read_register_2 = 0;
+        write_register = 0;
+        write_enable = 0;
+        write_data = 0;
+
+        // Wait for global reset
+        #100;
+
+        // Test Case 1: Write and Read from Register 0
+        write_enable = 1;
+        write_register = 2'b00;
+        write_data = 8'hAA; // Write value 0xAA into Register 0
+        #20;
+        write_enable = 0;
+        read_register_1 = 2'b00; // Read from Register 0
+        #20;
+
+        // Test Case 2: Write and Read from Register 1
+        write_enable = 1;
+        write_register = 2'b01;
+        write_data = 8'h55; // Write value 0x55 into Register 1
+        #20;
+        write_enable = 0;
+        read_register_2 = 2'b01; // Read from Register 1
+        #20;
+
+        // Finish the simulation
+        #100;
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("At time %t, Data Out 1 = %h, Data Out 2 = %h",
+                  $time, data_out_1, data_out_2);
+    end
+
+endmodule

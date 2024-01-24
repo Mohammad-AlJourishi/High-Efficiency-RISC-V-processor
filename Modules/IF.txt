@@ -1,0 +1,68 @@
+// IF 1st stage
+module instruction_memory (
+    input clk,
+    input [14:0] address, // 15-bit address for 32K memory
+    output reg [7:0] instruction // 8-bit instruction output
+);
+
+    reg [7:0] mem[32767:0]; // 32K x 8-bit instruction memory
+
+    integer j; // Declare loop variable
+
+    initial begin
+        for (j = 0; j < 32768; j = j + 1) begin
+            mem[j] = 8'b0;
+        end
+    end
+
+    // Fetch instruction at the negative edge of the clock
+    always @(negedge clk) begin
+        instruction <= mem[address]; 
+    end
+endmodule
+
+// Testbench for instruction_memory
+`timescale 1ns / 1ps
+
+module instruction_memory_tb;
+
+    // Inputs
+    reg clk;
+    reg [14:0] address;
+
+    // Outputs
+    wire [7:0] instruction;
+
+    // Instantiate the Unit Under Test (UUT)
+    instruction_memory uut (
+        .clk(clk), 
+        .address(address), 
+        .instruction(instruction)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Clock with period of 20ns
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        address = 0; #20;
+        address = 1; #20;
+        address = 2; #20;
+        address = 3; #20;
+
+        // Finish the simulation
+        #100;
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("At time %t, Address = %h | Instruction = %h",
+                  $time, address, instruction);
+    end
+
+endmodule

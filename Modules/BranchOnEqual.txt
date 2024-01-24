@@ -1,0 +1,110 @@
+//BEQ
+module beq_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [7:0] rs1,      // Not used in this simplified module
+    input [7:0] rs2,      // Not used in this simplified module
+    input [6:0] imm,      // 7-bit immediate, assuming this is the correct format
+    input zero_flag,      // Zero flag from ALU
+    input [31:0] pc_in,   // Current PC value
+    output reg [31:0] pc_out // Output PC value
+);
+
+  // Initial block is only for simulation purposes. In synthesis, this would be removed.
+  initial begin
+    pc_out = pc_in; // Initialize pc_out with pc_in to avoid latches
+  end
+
+  always @(negedge clk) begin
+    if (opcode == 7'b1100011 && funct3 == 3'b001) begin
+      if (zero_flag) begin
+        // Sign-extend the 7-bit immediate to 16 bits, then left shift by 1 to account for word alignment
+        pc_out = pc_in + {{9{imm[6]}}, imm, 1'b0};
+      end else begin
+        pc_out = pc_in; // If zero flag is not asserted, pc_out remains unchanged
+      end
+    end
+  end
+endmodule
+
+
+
+
+
+`timescale 1ns / 1ps
+
+module beq_instruction_tb;
+
+  // Inputs
+  reg clk;
+  reg [6:0] opcode;
+  reg [2:0] funct3;
+  reg [7:0] rs1;
+  reg [7:0] rs2;
+  reg [6:0] imm;
+  reg zero_flag;
+  reg [31:0] pc_in;
+
+  // Outputs
+  wire [31:0] pc_out;
+
+  // Instantiate the Unit Under Test (UUT)
+  beq_instruction uut (
+      .clk(clk),
+      .opcode(opcode),
+      .funct3(funct3),
+      .rs1(rs1),
+      .rs2(rs2),
+      .imm(imm),
+      .zero_flag(zero_flag),
+      .pc_in(pc_in),
+      .pc_out(pc_out)
+  );
+
+  // Clock generation
+  initial begin
+    clk = 0;
+    forever #10 clk = ~clk; // Clock with a period of 20ns
+  end
+
+  // Test sequence
+  initial begin
+    // Initialize Inputs
+    opcode = 7'b1100011; // Opcode for BEQ
+    funct3 = 3'b001;     // funct3 for BEQ
+     rs1 = 8'd0;          // Not used in this module
+    rs2 = 8'd0;          // Not used in this module
+    imm = 7'd2;          // Example immediate value, represents a branch target 4 bytes ahead
+    zero_flag = 1'b0;    // Initially, zero_flag is not asserted
+    pc_in = 32'd100;     // Example starting PC value
+
+    // Wait for the negative edge of the clock
+    @(negedge clk);
+    #20; // Additional delay
+
+    // Assert zero_flag to simulate a condition where rs1 == rs2
+    zero_flag = 1'b1; // Branch should be taken and pc_out should be updated
+
+    // Wait and observe the new output
+    @(negedge clk);
+    #20; // Additional delay
+
+    // Deassert zero_flag
+    zero_flag = 1'b0; // Branch should not be taken and pc_out should not change
+
+    // Wait and observe the new output
+    @(negedge clk);
+    #20; // Additional delay
+
+    // Finish the simulation
+    $finish;
+  end
+
+  // Monitor changes
+  initial begin
+    $monitor("Time = %t, zero_flag = %b, pc_in = %h, pc_out = %h",
+              $time, zero_flag, pc_in, pc_out);
+  end
+
+endmodule

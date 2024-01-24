@@ -1,0 +1,96 @@
+module CU(
+  input [6:0] opcode,
+  input clk,
+  input stall, 
+  
+  output reg branch,
+  output reg memread,
+  output reg memtoreg,
+  output reg memwrite,
+  output reg aluSrc,
+  output reg regwrite,
+  output reg [1:0] Aluop);
+
+  always @(negedge clk) begin
+    // Reset control signals if stall is active
+    if (stall) begin
+      {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = 7'b0;
+    end else begin
+      // Set control signals based on opcode
+      case (opcode)
+        7'b0000011: {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = {1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 2'b00};
+        7'b0100011: {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = {1'b1, 1'bx, 1'b0, 1'b0, 1'b1, 1'b0, 2'b00};
+        7'b0110011: {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = {1'b0, 1'b0, 1'b1, 1'b0, 1'b0, 1'b0, 2'b10};
+        7'b1100011: {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = {1'b0, 1'bx, 1'b0, 1'b0, 1'b0, 1'b1, 2'b01};
+        7'b0010011: {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = {1'b1, 1'b0, 1'b1, 1'b0, 1'b0, 1'b0, 2'b00};
+        default:    {aluSrc, memtoreg, regwrite, memread, memwrite, branch, Aluop} = 7'b0;
+      endcase
+    end
+  end
+endmodule
+
+`timescale 1ns / 1ps
+
+module CU_testbench;
+
+  // Inputs
+  reg [6:0] opcode;
+  reg clk;
+  reg stall;
+
+  // Outputs
+  wire branch;
+  wire memread;
+  wire memtoreg;
+  wire memwrite;
+  wire aluSrc;
+  wire regwrite;
+  wire [1:0] Aluop;
+
+  // Instantiate the Unit Under Test (UUT)
+  CU uut (
+    .opcode(opcode), 
+    .clk(clk), 
+    .stall(stall), 
+    .branch(branch), 
+    .memread(memread), 
+    .memtoreg(memtoreg), 
+    .memwrite(memwrite), 
+    .aluSrc(aluSrc), 
+    .regwrite(regwrite), 
+    .Aluop(Aluop)
+  );
+
+  initial begin
+    // Initialize Inputs
+    opcode = 0;
+    clk = 0;
+    stall = 0;
+
+    // Wait 100 ns for global reset to finish
+    #100;
+      
+    // Add stimulus here
+    opcode = 7'b0000011; // Example opcode
+    #10;
+    stall = 1; // Activate stall
+    #10;
+    stall = 0; // Deactivate stall
+    #10;
+    opcode = 7'b0100011; // Another example opcode
+    #10;
+    opcode = 7'b1111111; // Undefined opcode
+    #10;
+    
+    $finish; // End simulation
+  end
+  
+  // Clock generation
+  always #5 clk = !clk;
+
+  initial begin
+    $monitor("Time = %d, Opcode = %b, Stall = %b, Branch = %b, MemRead = %b, MemToReg = %b, MemWrite = %b, ALUSrc = %b, RegWrite = %b, ALUOp = %b",
+             $time, opcode, stall, branch, memread, memtoreg, memwrite, aluSrc, regwrite, Aluop);
+  end
+
+endmodule

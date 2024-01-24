@@ -1,0 +1,507 @@
+// ADD
+module add_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+     always @(negedge clk) begin
+        if (opcode == 7'b0110011 && funct3 == 3'b110 && funct7 == 7'b0000000) begin
+            rd = rs1 + rs2; // Perform addition and store result in rd
+        end else begin
+            rd = 5'h00; // Default to 0 for other opcodes/functs
+        end
+    end
+endmodule
+
+// AND
+  module and_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b101 && funct7 == 7'b0000000) begin
+        rd = rs1 & rs2; // Perform bitwise AND and store result in rd
+      end
+    end
+  endmodule
+
+
+	// OR
+  module or_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b011 && funct7 == 7'b0000000) begin
+        rd = rs1 | rs2; // Perform bitwise OR and store result in rd
+      end
+    end
+  endmodule
+
+// SLT
+  module slt_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b100 && funct7 == 7'b0000000) begin
+        if (rs1 < rs2) begin
+          rd = 1; // Set rd to 1 if rs1 < rs2
+        end else begin
+          rd = 0; // Set rd to 0 otherwise
+        end
+      end
+    end
+  endmodule
+
+// SLL
+  module sll_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [9:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b010 && funct7 == 7'b0000000) begin
+        rd = rs1 << rs2; // Perform left shift and store result in rd
+      end
+    end
+  endmodule
+
+
+//SRL
+module srl_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b000 && funct7 == 7'b0000000) begin
+        rd = rs1 >> rs2; // Perform right shift and store result in rd
+      end
+    end
+  endmodule
+
+
+// SUB
+  module sub_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b001 && funct7 == 7'b0100000) begin
+        rd = rs1 - rs2; // Perform subtraction and store result in rd
+      end
+    end
+  endmodule
+
+
+// XOR
+  module xor_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [6:0] funct7,
+    input [4:0] rs1,
+    input [4:0] rs2,
+    output reg [4:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0110011 && funct3 == 3'b111 && funct7 == 7'b0000000) begin
+        rd = rs1 ^ rs2; // Perform bitwise XOR and store result in rd
+      end
+    end
+  endmodule
+
+// ADDI
+module addi_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [4:0] rs1,
+    input [11:0] imm, // Immediate value is now 12 bits to match the RISC-V format
+    output reg [4:0] rd
+);
+
+    always @(negedge clk) begin
+      // Check for the ADDI opcode (0010011) and funct3 (000)
+      if (opcode == 7'b0010011 && funct3 == 3'b000) begin
+        // Sign-extend the immediate and perform addition, store result in rd
+        rd = rs1 + {{7{imm[11]}}, imm}; // Sign-extension for the 12-bit immediate
+      end else begin
+        rd = 5'h00; // Default case to handle invalid opcodes
+      end
+    end
+endmodule
+
+// ANDI
+  module andi_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [4:0] rs1,
+    input [11:0] imm, // Immediate value is now 12 bits to match the RISC-V format
+    output reg [4:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0010011 && funct3 == 3'b110) begin
+        rd = rs1 & {{7{imm[11]}}, imm}; // Sign-extension for the 12-bit immediate
+      end
+    end 
+  endmodule
+
+// JALR
+  module jalr_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [7:0] rs1,
+    input [7:0] imm,
+    input [15:0] pc_in,
+    output reg [15:0] pc_out,
+    output reg [7:0] rd_out
+  );
+
+    always @(negedge clk) begin
+      if (opcode == 7'b1100111 && funct3 == 3'b000) begin
+        rd_out = pc_in + 4;
+        pc_out = rs1 + imm;
+      end
+    end
+  endmodule
+
+ // LB
+  module lb_instruction (
+  input clk,
+  input [6:0] opcode,
+  input [2:0] funct3,
+  input [7:0] rs1,
+  input [7:0] imm,
+  input [7:0] mem_data, // Data from memory
+  output reg [31:0] rd // Output register, changed to 32 bits
+);
+
+  always @(negedge clk) begin
+    if (opcode == 7'b0000011 && funct3 == 3'b010) begin // Corrected funct3
+      rd = {{24{mem_data[7]}}, mem_data}; // Sign extend the 8-bit data to fill the 32-bit register
+    end
+  end
+endmodule
+
+//LW
+module lw_instruction (
+  input clk,
+  input [6:0] opcode,
+  input [2:0] funct3,
+  input [7:0] rs1,        // Base address register, not used in this simple module
+  input [7:0] imm,        // Immediate offset, not used in this simple module
+  input [31:0] mem_data,  // Data from memory
+  output reg [31:0] rd    // Output register, corrected to 32 bits
+);
+
+  always @(negedge clk) begin
+    if (opcode == 7'b0000011 && funct3 == 3'b000) begin
+      rd = mem_data; // Store the entire 32-bit word to the output register
+    end
+  end
+endmodule
+
+// ORI
+  module ori_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [4:0] rs1,
+    input [11:0] imm, // Immediate value is now 12 bits to match the RISC-V format
+    output reg [7:0] rd
+);
+
+    always @(negedge clk) begin
+      if (opcode == 7'b0010011 && funct3 == 3'b111) begin
+        rd = rs1 |{{7{imm[11]}}, imm}; // Perform bitwise OR with immediate value and store the result in rd
+      end
+    end
+  endmodule
+
+module jal_instruction (
+  input clk,
+  input [6:0] opcode,
+  input [2:0] rd,
+  input [20:0] imm,   // 21-bit to account for sign extension
+  input [15:0] pc_in,
+  output reg [15:0] pc_out,
+  output reg [15:0] rd_out, // Changed to 16 bits to match pc_in
+  output reg jump_detected // New signal indicating a jump instruction
+);
+
+  // Initialize the output registers
+  initial begin
+    pc_out = 16'b0;
+    rd_out = 16'b0;
+    jump_detected = 1'b0;
+  end
+
+  always @(negedge clk) begin
+    if (opcode == 7'b1101111) begin
+      rd_out = pc_in + 4; // Store the return address (next instruction)
+      pc_out = pc_in + {{11{imm[20]}}, imm[19:0]} << 1; // Calculate jump target address
+      jump_detected = 1'b1; // Set the jump detection signal
+    end else begin
+      pc_out = pc_in;       // Maintain the current pc if no jump is detected
+      rd_out = 16'b0;       // Clear rd_out if no jump is detected
+      jump_detected = 1'b0; // Reset the jump detection signal
+    end
+  end
+endmodule
+
+
+// LUI
+  module lui_instruction (
+  input clk,
+  input [6:0] opcode,
+  input [19:0] imm, // Corrected to 20-bit immediate
+  output reg [31:0] rd // Corrected to 32-bit register
+);
+
+  always @(negedge clk) begin
+    if (opcode == 7'b0110111) begin // Corrected opcode for LUI
+      rd = {imm, 12'b0}; // Set the upper 20 bits of the register based on the immediate value
+    end
+  end
+endmodule
+
+// BNE
+  module bne_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [7:0] rs1,
+    input [7:0] rs2,
+    input [6:0] imm,
+    input zero_flag, // Zero flag from ALU
+    output reg [15:0] pc_out // Output PC value
+  );
+
+    always @(negedge clk) begin
+      if (opcode == 7'b1100011 && funct3 == 3'b000) begin
+        if (!zero_flag) begin
+          pc_out = pc_out + {imm, 1'b0}; // Update PC based on the immediate value and a zero bit
+        end
+      end
+    end
+  endmodule
+
+
+//BEQ
+module beq_instruction (
+    input clk,
+    input [6:0] opcode,
+    input [2:0] funct3,
+    input [7:0] rs1,      // Not used in this simplified module
+    input [7:0] rs2,      // Not used in this simplified module
+    input [6:0] imm,      // 7-bit immediate, assuming this is the correct format
+    input zero_flag,      // Zero flag from ALU
+    input [15:0] pc_in,   // Current PC value
+    output reg [15:0] pc_out // Output PC value
+);
+
+  // Initial block is only for simulation purposes. In synthesis, this would be removed.
+  initial begin
+    pc_out = pc_in; // Initialize pc_out with pc_in to avoid latches
+  end
+
+  always @(negedge clk) begin
+    if (opcode == 7'b1100011 && funct3 == 3'b001) begin
+      if (zero_flag) begin
+        // Sign-extend the 7-bit immediate to 16 bits, then left shift by 1 to account for word alignment
+        pc_out = pc_in + {{9{imm[6]}}, imm, 1'b0};
+      end else begin
+        pc_out = pc_in; // If zero flag is not asserted, pc_out remains unchanged
+      end
+    end
+  end
+endmodule
+
+// Store Byte (sb) Module
+module store_byte(
+    input [6:0] opcode,       // Opcode for store instructions
+    input [2:0] funct3,       // Function 3 for sb
+    input [4:0] rs1,          // Source register 1 (base address)
+    input [4:0] rs2,          // Source register 2 (data to store)
+    input [11:0] imm,         // Immediate value (offset)
+    input clk,
+    output reg [31:0] mem_addr, // Memory address
+    output reg [7:0] data_out   // Data to store (byte)
+);
+
+    // Opcode for Store Byte (sb) is 0100011 (23 in hex) and funct3 for sb is 000
+    always @(negedge clk) begin
+        if (opcode == 7'b0100011 && funct3 == 3'b010) begin
+            // Calculate memory address using base register and immediate offset
+            mem_addr = rs1 + {{20{imm[11]}}, imm[11:0]};
+            // Data to store is the least significant byte of rs2
+            data_out = rs2[7:0];
+        end
+    end
+endmodule
+// Store Word (sw) Module
+module store_word(
+    input [6:0] opcode,       // Opcode for store instructions
+    input [2:0] funct3,       // Function 3 for sw
+    input [4:0] rs1,          // Source register 1 (base address)
+    input [4:0] rs2,          // Source register 2 (data to store)
+    input [11:0] imm,         // Immediate value (offset)
+    input clk,
+    output reg [31:0] mem_addr, // Memory address
+    output reg [31:0] data_out   // Data to store (word)
+);
+
+    // Opcode for Store Word (sw) is 0100011 (23 in hex) and funct3 for sw is 010
+    always @(negedge clk) begin
+        if (opcode == 7'b0100011 && funct3 == 3'b000) begin
+            // Calculate memory address using base register and immediate offset
+            mem_addr = rs1 + {{20{imm[11]}}, imm[11:0]};
+            // Data to store is the content of rs2
+            data_out = rs2;
+        end
+    end
+endmodule
+
+
+
+
+
+
+module alu_control (
+  input clk,
+  input [6:0] opcode,        // Opcode of the instruction
+  input [2:0] funct3,        // funct3 field of the instruction (used for some instructions)
+  input [6:0] funct7,        // funct7 field of the instruction (used for some instructions)
+  output reg [3:0] alu_op    // ALU operation signal
+);
+
+  always @(negedge clk) begin
+  case (opcode)
+      7'b0110011: begin // R-type instructions
+          case (funct3)
+              3'b000: begin
+                        if (funct7 == 7'b0000000)
+                            alu_op = 4'b0010; // ADD
+                        else if (funct7 == 7'b0100000)
+                            alu_op = 4'b0110; // SUB
+                    end
+              3'b101: alu_op = 4'b0000; // AND
+              3'b011: alu_op = 4'b0001; // OR
+              3'b111: alu_op = 4'b0011; // XOR
+              3'b010: alu_op = 4'b0100; // SLL
+              3'b000: alu_op = 4'b0101; // SRL
+          endcase
+      end
+      7'b0010011: alu_op = 4'b0010; // I-type instructions (ADDI, ANDI, ORI...)
+      7'b0000011: alu_op = 4'b0010; // Load instructions (LB, LW...)
+      7'b0100011: alu_op = 4'b0010; // Store instructions (SB, SW...)
+      7'b1100011: alu_op = 4'b0110; // Branch instructions (BEQ, BNE...)
+      7'b0110111: alu_op = 4'b0111; // LUI
+      default: alu_op = 4'b0000;    // Default or NOP
+  endcase
+end
+
+endmodule
+
+`timescale 1ns / 1ps
+
+module instruction_testbench;
+
+    // Inputs
+    reg clk;
+    reg [6:0] opcode;
+    reg [2:0] funct3;
+    reg [6:0] funct7;
+    reg [4:0] rs1;
+    reg [4:0] rs2;
+    reg [11:0] imm;
+
+    // Outputs
+    wire [4:0] rd;
+    wire [15:0] pc_out;
+    wire [7:0] rd_out;
+
+    // Instantiate instruction modules
+    add_instruction add_inst(
+        .clk(clk), .opcode(opcode), .funct3(funct3), .funct7(funct7), 
+        .rs1(rs1), .rs2(rs2), .rd(rd)
+    );
+
+    // ... Instantiate other instruction modules similarly ...
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Clock with a period of 20ns
+    end
+
+    // Test sequence
+    initial begin
+      $dumpfile("dump.vcd"); 
+$dumpvars;
+        // Test ADD Instruction
+        opcode = 7'b0110011; funct3 = 3'b110; funct7 = 7'b0000000; 
+        rs1 = 5'b00010; rs2 = 5'b00011; // rs1=2, rs2=3
+        #20; // ADD: Expect rd = 5 (2 + 3)
+
+        // ... Add tests for other instructions ...
+
+        // Finish the simulation
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("At time %t, opcode = %b, funct3 = %b, funct7 = %b, rs1 = %d, rs2 = %d, rd = %d", 
+                 $time, opcode, funct3, funct7, rs1, rs2, rd);
+    end
+
+endmodule

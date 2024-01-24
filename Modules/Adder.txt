@@ -1,0 +1,7 @@
+module adder(
+  input [31:0] p,
+  input [31:0] q,
+  output [31:0] out);
+  
+  assign out = p+q;
+endmodule

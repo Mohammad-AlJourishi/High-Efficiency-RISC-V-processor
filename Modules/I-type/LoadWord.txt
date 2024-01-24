@@ -1,0 +1,84 @@
+//LW
+module lw_instruction (
+  input clk,
+  input [6:0] opcode,
+  input [2:0] funct3,
+  input [7:0] rs1,        // Base address register, not used in this simple module
+  input [7:0] imm,        // Immediate offset, not used in this simple module
+  input [31:0] mem_data,  // Data from memory
+  output reg [31:0] rd    // Output register, corrected to 32 bits
+);
+
+  always @(negedge clk) begin
+    if (opcode == 7'b0000011 && funct3 == 3'b000) begin
+      rd = mem_data; // Store the entire 32-bit word to the output register
+    end
+  end
+endmodule
+
+
+
+`timescale 1ns / 1ps
+
+module lw_instruction_tb;
+
+  // Inputs
+  reg clk;
+  reg [6:0] opcode;
+  reg [2:0] funct3;
+  reg [7:0] rs1;
+  reg [7:0] imm;
+  reg [31:0] mem_data;
+
+  // Outputs
+  wire [31:0] rd;
+
+  // Instantiate the Unit Under Test (UUT)
+  lw_instruction uut (
+      .clk(clk),
+      .opcode(opcode),
+      .funct3(funct3),
+      .rs1(rs1),
+      .imm(imm),
+      .mem_data(mem_data),
+      .rd(rd)
+  );
+
+  // Clock generation
+  initial begin
+    clk = 0;
+    forever #10 clk = ~clk; // Clock with a period of 20ns
+  end
+
+  // Test sequence
+  initial begin
+    // Initialize Inputs
+    opcode = 7'b0000011; // Opcode for LW
+    funct3 = 3'b000;     // funct3 for LW
+    rs1 = 8'd0;          // Base address register, not used in this simple module
+    imm = 8'd0;          // Immediate offset, not used in this simple module
+    mem_data = 32'hAABBCCDD; // Example memory data
+
+    // Wait for the negative edge of the clock
+    @(negedge clk);
+    #40; // Additional delay to ensure the inputs are captured
+
+    // Change Inputs for another LW operation
+    mem_data = 32'h11223344; // Another example memory data
+
+    // Wait and observe the new output
+    @(negedge clk);
+    #40; // Additional delay to observe changes
+
+    // Finish the simulation
+    $finish;
+  end
+
+  // Monitor changes
+  initial begin
+    $monitor("Time = %t, mem_data = %h, rd = %h",
+              $time, mem_data, rd);
+  end
+
+endmodule
+

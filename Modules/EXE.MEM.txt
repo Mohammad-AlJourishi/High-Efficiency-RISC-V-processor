@@ -1,0 +1,97 @@
+module ex_mem (
+    input clk,
+    input reset,
+    input [7:0] alu_result,
+    input [1:0] alu_destination,
+    input reg_write,
+    input [7:0] data_out,
+    output reg [7:0] alu_result_out,
+    output reg [1:0] alu_destination_out,
+    output reg reg_write_out,
+    output reg [7:0] data_out_out
+);
+
+  always @(negedge clk or negedge reset) begin
+    if (reset) begin
+      alu_result_out <= 8'h0;
+      alu_destination_out <= 2'h0;
+      reg_write_out <= 1'b0;
+      data_out_out <= 8'h0;
+    end else begin
+      alu_result_out <= alu_result;
+      alu_destination_out <= alu_destination;
+      reg_write_out <= reg_write;
+      data_out_out <= data_out;
+    end
+  end
+endmodule
+
+
+
+`timescale 1ns / 1ps
+
+module ex_mem_tb;
+
+    // Inputs
+    reg clk;
+    reg reset;
+    reg [7:0] alu_result;
+    reg [1:0] alu_destination;
+    reg reg_write;
+    reg [7:0] data_out;
+
+    // Outputs
+    wire [7:0] alu_result_out;
+    wire [1:0] alu_destination_out;
+    wire reg_write_out;
+    wire [7:0] data_out_out;
+
+    // Instantiate the Unit Under Test (UUT)
+    ex_mem uut (
+        .clk(clk), 
+        .reset(reset), 
+        .alu_result(alu_result), 
+        .alu_destination(alu_destination), 
+        .reg_write(reg_write), 
+        .data_out(data_out), 
+        .alu_result_out(alu_result_out), 
+        .alu_destination_out(alu_destination_out), 
+        .reg_write_out(reg_write_out), 
+        .data_out_out(data_out_out)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Toggle clock every 10 ns
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        reset = 1;
+        alu_result = 0;
+        alu_destination = 0;
+        reg_write = 0;
+        data_out = 0;
+        #20; // Wait 20ns
+
+        // Change Inputs
+        reset = 0;
+        alu_result = 8'hAA;
+        alu_destination = 2'b01;
+        reg_write = 1;
+        data_out = 8'h55;
+        #40; // Wait 40ns
+
+        // Finish the simulation
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("At time %t, alu_result_out = %h, alu_destination_out = %h, reg_write_out = %b, data_out_out = %h",
+                 $time, alu_result_out, alu_destination_out, reg_write_out, data_out_out);
+    end
+
+endmodule

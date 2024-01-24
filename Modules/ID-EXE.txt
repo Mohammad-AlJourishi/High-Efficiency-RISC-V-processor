@@ -1,0 +1,139 @@
+module id_exe (
+    input clk,
+    input reset,
+    input [31:0] pc_in,
+    input [7:0] instruction,
+    input [7:0] rs1,
+    input [7:0] rs2,
+    input zero_flag,
+    input decoded_alu_src,    
+    input decoded_reg_write,
+    input [1:0] decoded_alu_op,
+    input [1:0] decoded_alu_src_select,
+    output reg [31:0] pc_out,
+    output reg [7:0] rs1_out,
+    output reg [7:0] rs2_out,
+    output reg [7:0] imm,
+    output reg alu_src,
+    output reg reg_write,
+    output reg [1:0] alu_op,
+    output reg [1:0] alu_src_select
+);
+
+    always @(negedge clk or negedge reset) begin
+        if (reset) begin
+            // Reset all outputs
+            pc_out <= 32'h0;
+            rs1_out <= 8'h0;
+            rs2_out <= 8'h0;
+            imm <= 8'h0;
+            alu_src <= 0;
+            reg_write <= 0;
+            alu_op <= 2'b00;
+            alu_src_select <= 2'b00;
+        end else begin
+            // Update outputs based on the input signals
+            pc_out <= pc_in;
+            rs1_out <= rs1;
+            rs2_out <= rs2;
+            // Extract immediate value from instruction, pseudocode
+            imm <= instruction[7:0]; // Modify as per your instruction format
+            // Update control signals
+            alu_src <= decoded_alu_src;
+            reg_write <= decoded_reg_write;
+            alu_op <= decoded_alu_op;
+            alu_src_select <= decoded_alu_src_select;
+        end
+    end
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module id_exe_tb;
+
+    // Inputs
+    reg clk;
+    reg reset;
+    reg [31:0] pc_in;
+    reg [7:0] instruction;
+    reg [7:0] rs1;
+    reg [7:0] rs2;
+    reg zero_flag;
+    reg decoded_alu_src;
+    reg decoded_reg_write;
+    reg [1:0] decoded_alu_op;
+    reg [1:0] decoded_alu_src_select;
+
+    // Outputs
+    wire [31:0] pc_out;
+    wire [7:0] rs1_out;
+    wire [7:0] rs2_out;
+    wire [7:0] imm;
+    wire alu_src;
+    wire reg_write;
+    wire [1:0] alu_op;
+    wire [1:0] alu_src_select;
+
+    // Instantiate the Module
+    id_exe uut (
+        .clk(clk), .reset(reset), .pc_in(pc_in), .instruction(instruction),
+        .rs1(rs1), .rs2(rs2), .zero_flag(zero_flag),
+        .decoded_alu_src(decoded_alu_src), .decoded_reg_write(decoded_reg_write),
+        .decoded_alu_op(decoded_alu_op), .decoded_alu_src_select(decoded_alu_src_select),
+        .pc_out(pc_out), .rs1_out(rs1_out), .rs2_out(rs2_out), .imm(imm),
+        .alu_src(alu_src), .reg_write(reg_write), .alu_op(alu_op), .alu_src_select(alu_src_select)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Clock with a period of 20ns
+    end
+
+    // Test sequence
+    initial begin
+        // Test initialization
+        reset = 1;
+        pc_in = 32'h0001;
+        instruction = 8'hFF;
+        rs1 = 8'h01;
+        rs2 = 8'h02;
+        zero_flag = 0;
+        decoded_alu_src = 0;
+        decoded_reg_write = 0;
+        decoded_alu_op = 2'b00;
+        decoded_alu_src_select = 2'b00;
+        #20;
+
+        // Deactivate reset and apply new test values
+        reset = 0;
+        pc_in = 32'h0010;
+        instruction = 8'hA5;
+        rs1 = 8'h05;
+        rs2 = 8'hA5;
+        zero_flag = 1;
+        decoded_alu_src = 1;
+        decoded_reg_write = 1;
+        decoded_alu_op = 2'b10;
+        decoded_alu_src_select = 2'b01;
+        #40;
+
+        // Change the inputs again for further testing
+        pc_in = 32'h0020;
+        instruction = 8'h5A;
+        rs1 = 8'h0A;
+        rs2 = 8'h5A;
+        #20;
+
+        // Finish the simulation
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("Time = %t, pc_in = %h, instruction = %h, rs1 = %h, rs2 = %h, zero_flag = %b, pc_out = %h, rs1_out = %h, rs2_out = %h, imm = %h, alu_src = %b, reg_write = %b, alu_op = %b, alu_src_select = %b",
+                 $time, pc_in, instruction, rs1, rs2, zero_flag, pc_out, rs1_out, rs2_out, imm, alu_src, reg_write, alu_op, alu_src_select);
+    end
+endmodule
+

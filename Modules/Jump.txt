@@ -1,0 +1,91 @@
+module jal_instruction (
+  input clk,
+  input [6:0] opcode,
+  input [2:0] rd,
+  input [20:0] imm,   // 21-bit to account for sign extension
+  input [31:0] pc_in,
+  output reg [31:0] pc_out,
+  output reg [31:0] rd_out, // Changed to 16 bits to match pc_in
+  output reg jump_detected // New signal indicating a jump instruction
+);
+
+  // Initialize the output registers
+  initial begin
+    pc_out = 32'b0;
+    rd_out = 32'b0;
+    jump_detected = 1'b0;
+  end
+
+  always @(negedge clk) begin
+    if (opcode == 7'b1101111) begin
+      rd_out = pc_in + 4; // Store the return address (next instruction)
+      pc_out = pc_in + {{11{imm[20]}}, imm[19:0]} << 1; // Calculate jump target address
+      jump_detected = 1'b1; // Set the jump detection signal
+    end else begin
+      pc_out = pc_in;       // Maintain the current pc if no jump is detected
+      rd_out = 32'b0;       // Clear rd_out if no jump is detected
+      jump_detected = 1'b0; // Reset the jump detection signal
+    end
+  end
+endmodule
+
+
+
+
+`timescale 1ns / 1ps
+
+module jal_instruction_tb;
+
+  // Inputs
+  reg clk;
+  reg [6:0] opcode;
+  reg [2:0] rd;
+  reg [20:0] imm;
+  reg [31:0] pc_in;
+
+  // Outputs
+  wire [31:0] pc_out;
+  wire [31:0] rd_out; // Updated to 16 bits
+  wire jump_detected;
+
+  // Instantiate the Unit Under Test (UUT)
+  jal_instruction uut (
+      .clk(clk),
+      .opcode(opcode),
+      .rd(rd),
+      .imm(imm),
+      .pc_in(pc_in),
+      .pc_out(pc_out),
+      .rd_out(rd_out),
+      .jump_detected(jump_detected)
+  );
+
+  // Clock generation
+  initial begin
+      clk = 0;
+      forever #10 clk = ~clk; // Clock with a period of 20ns
+  end
+
+  // Test sequence
+  initial begin
+      // Initialize Inputs
+      opcode = 7'b1101111; // Opcode for JAL
+      rd = 3'b010;         // Example destination register
+      pc_in = 32'h0000;    // Starting program counter value
+      imm = 32'h00002;     // Example immediate value (jump offset)
+
+      // Wait for the negative edge of the clock
+      @(negedge clk);
+      #20; // Additional delay to ensure the inputs are captured
+
+   
+      $finish;
+  end
+
+  // Monitor changes
+  initial begin
+      $monitor("Time = %t, pc_in = %h, imm = %h, pc_out = %h, rd_out = %h, jump_detected = %b",
+                $time, pc_in, imm, pc_out, rd_out, jump_detected);
+  end
+
+endmodule

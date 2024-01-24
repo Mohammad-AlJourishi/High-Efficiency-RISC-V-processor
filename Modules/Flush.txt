@@ -1,0 +1,75 @@
+module flush_control (
+  input jump_detected,      // Signal indicating detection of a jump instruction
+  input clk,                // Clock signal
+  output reg flush          // Flush signal to reset pipeline stages
+);
+
+  always @(negedge clk) begin
+    if (jump_detected) begin
+      flush <= 1'b1;  // Set flush signal to reset pipeline stages
+    end else begin
+      flush <= 1'b0;  // Reset flush signal
+    end
+  end
+endmodule
+
+
+
+`timescale 1ns / 1ps
+
+module flush_control_tb;
+
+    // Inputs
+    reg jump_detected;
+    reg clk;
+
+    // Output
+    wire flush;
+
+    // Instantiate the Flush Control module
+    flush_control uut (
+        .jump_detected(jump_detected),
+        .clk(clk),
+        .flush(flush)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Clock with a period of 20ns
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        jump_detected = 0;
+
+        // Wait for global reset
+        #100;
+
+        // Test Case 1: No jump detected
+        jump_detected = 0;
+        @(negedge clk); // Wait for negedge of clk to see the effect
+        #20;
+
+        // Test Case 2: Jump detected
+        jump_detected = 1;
+        @(negedge clk); // Wait for negedge of clk to see the effect
+        #20;
+
+        // Test Case 3: Jump no longer detected
+        jump_detected = 0;
+        @(negedge clk); // Wait for negedge of clk to see the effect
+        #20;
+
+        // Finish the simulation
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("At time %t, jump_detected = %b, flush = %b",
+                  $time, jump_detected, flush);
+    end
+
+endmodule

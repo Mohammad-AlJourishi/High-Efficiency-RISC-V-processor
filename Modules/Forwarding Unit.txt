@@ -1,0 +1,119 @@
+module forwarding_unit (
+    input clk,
+    input [1:0] ex_mem_alu_destination,
+    input [1:0] id_exe_rs1,
+    input [1:0] id_exe_rs2,
+    input [1:0] ex_mem_rd,
+    input [1:0] mem_wb_rd, 
+    input mem_wb_reg_write,
+    input ex_mem_reg_write,
+    output reg [1:0] forward_a, 
+    output reg [1:0] forward_b  
+);
+
+    always @(negedge clk) begin
+        // Forwarding logic for rs1
+        if (ex_mem_reg_write && (ex_mem_rd != 0) && (ex_mem_rd == id_exe_rs1)) begin
+            forward_a = 2'b10; // Forward from EX/MEM
+        end else if (mem_wb_reg_write && (mem_wb_rd != 0) && (mem_wb_rd == id_exe_rs1)) begin
+            forward_a = 2'b01; // Forward from MEM/WB
+        end else begin
+            forward_a = 2'b00; // No forwarding
+        end
+
+        // Forwarding logic for rs2
+        if (ex_mem_reg_write && (ex_mem_rd != 0) && (ex_mem_rd == id_exe_rs2)) begin
+            forward_b = 2'b10; // Forward from EX/MEM
+        end else if (mem_wb_reg_write && (mem_wb_rd != 0) && (mem_wb_rd == id_exe_rs2)) begin
+            forward_b = 2'b01; // Forward from MEM/WB
+        end else begin
+            forward_b = 2'b00; // No forwarding for rs2
+        end
+    end
+endmodule
+
+
+
+
+
+`timescale 1ns / 1ps
+
+module forwarding_unit_tb;
+
+    // Inputs
+    reg clk;
+    reg [1:0] ex_mem_alu_destination;
+    reg [1:0] id_exe_rs1;
+    reg [1:0] id_exe_rs2;
+    reg [1:0] ex_mem_rd;
+    reg [1:0] mem_wb_rd;
+    reg mem_wb_reg_write;
+    reg ex_mem_reg_write;
+
+    // Outputs
+    wire [1:0] forward_a;
+    wire [1:0] forward_b;
+
+    // Instantiate the Unit Under Test (UUT)
+    forwarding_unit uut (
+        .clk(clk),
+        .ex_mem_alu_destination(ex_mem_alu_destination),
+        .id_exe_rs1(id_exe_rs1),
+        .id_exe_rs2(id_exe_rs2),
+        .ex_mem_rd(ex_mem_rd),
+        .mem_wb_rd(mem_wb_rd),
+        .mem_wb_reg_write(mem_wb_reg_write),
+        .ex_mem_reg_write(ex_mem_reg_write),
+        .forward_a(forward_a),
+        .forward_b(forward_b)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Toggle clock every 10 ns
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        ex_mem_alu_destination = 0;
+        id_exe_rs1 = 0;
+        id_exe_rs2 = 0;
+        ex_mem_rd = 0;
+        mem_wb_rd = 0;
+        mem_wb_reg_write = 0;
+        ex_mem_reg_write = 0;
+
+        // Wait for initial state
+        #20;
+
+        // Test case: Forward from EX/MEM to rs1
+        ex_mem_reg_write = 1;
+        ex_mem_rd = 2'b01;
+        id_exe_rs1 = 2'b01;
+        #20; // Wait for a clock period
+
+        // Test case: Forward from MEM/WB to rs2
+        mem_wb_reg_write = 1;
+        mem_wb_rd = 2'b10;
+        id_exe_rs2 = 2'b10;
+        #20; // Wait for a clock period
+
+        // Reset to test no forwarding scenario
+        ex_mem_reg_write = 0;
+        mem_wb_reg_write = 0;
+        #20; // Wait for a clock period
+
+        // Finish the simulation
+        $finish;
+    end
+
+    // Monitor changes
+    initial begin
+        $monitor("At time %t, forward_a = %b, forward_b = %b",
+                 $time, forward_a, forward_b);
+    end
+
+endmodule
+
